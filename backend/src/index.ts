@@ -36,11 +36,11 @@ export const app = new Elysia()
         errors: error.all,
       };
     }
-    set.status = 500;
+    console.error("⚠️ [API Error Handler]:", error.message);
     return {
       success: false,
-      message: "Internal Server Error",
-      error: error.message,
+      message: error.message || "Terjadi kendala pada server database",
+      data: [],
     };
   })
   .get("/", () => ({
