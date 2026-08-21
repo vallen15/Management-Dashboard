@@ -46,7 +46,7 @@ export const app = new Elysia()
   .get("/", () => ({
     success: true,
     message: "Posify POS & Sales API Server is running",
-    swagger: `http://localhost:${PORT}/swagger`,
+    swagger: `/swagger`,
   }))
   .use(authRoutes)
   .use(categoryRoutes)
@@ -54,7 +54,10 @@ export const app = new Elysia()
   .use(customerRoutes)
   .use(transactionRoutes)
   .use(dashboardRoutes)
-  .listen(PORT);
+  .listen({
+    port: PORT,
+    hostname: "0.0.0.0",
+  });
 
-console.log(`🚀 Posify API server running at http://localhost:${PORT}`);
-console.log(`📄 Swagger documentation at http://localhost:${PORT}/swagger`);
+console.log(`🚀 Posify API server running at http://0.0.0.0:${PORT}`);
+console.log(`📄 Swagger documentation at http://0.0.0.0:${PORT}/swagger`);
