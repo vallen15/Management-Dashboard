@@ -1,23 +1,22 @@
 import { Elysia, t } from "elysia";
 import { prisma } from "../db";
-import { validateEmail, sanitizeSearchQuery } from "../utils/validation";
+import { validateEmail } from "../utils/validation";
 
 export const customerRoutes = new Elysia({ prefix: "/api/customers" })
   .get(
     "/",
     async ({ query }) => {
-      const { search } = query;
-      const cleanSearch = sanitizeSearchQuery(search);
-
       try {
-        const where: any = {};
-        if (cleanSearch) {
-          where.OR = [
-            { name: { contains: cleanSearch, mode: "insensitive" } },
-            { phone: { contains: cleanSearch, mode: "insensitive" } },
-            { email: { contains: cleanSearch, mode: "insensitive" } },
-          ];
-        }
+        const searchStr = typeof query?.search === "string" ? query.search.trim().replace(/[%_]/g, "") : "";
+        const where: any = searchStr
+          ? {
+              OR: [
+                { name: { contains: searchStr } },
+                { phone: { contains: searchStr } },
+                { email: { contains: searchStr } },
+              ],
+            }
+          : {};
 
         const customers = await prisma.customer.findMany({
           where,
@@ -30,12 +29,18 @@ export const customerRoutes = new Elysia({ prefix: "/api/customers" })
         return {
           success: true,
           data: customers.map((c) => ({
-            ...c,
-            transactionCount: c._count?.transactions || 0,
+            id: c.id,
+            name: c.name,
+            email: c.email || undefined,
+            phone: c.phone || undefined,
+            address: c.address || undefined,
+            totalPurchases: c.totalPurchases || 0,
+            transactionCount: c._count ? c._count.transactions : 0,
+            createdAt: c.createdAt,
           })),
         };
       } catch (err: any) {
-        console.warn("⚠️ [Customer Route Notice]: Returning fallback empty array");
+        console.warn("⚠️ [Customer Route Handler Notice]: Returning empty customer array");
         return {
           success: true,
           data: [],
