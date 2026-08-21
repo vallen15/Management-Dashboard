@@ -6,11 +6,7 @@ import {
   Transaction,
 } from '../types';
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV
-    ? '/api'
-    : 'https://management-dashboard-production-e010.up.railway.app/api');
+const API_BASE = 'https://management-dashboard-production-e010.up.railway.app/api';
 
 async function handleResponse<T>(response: Response): Promise<T> {
   const json = await response.json();
