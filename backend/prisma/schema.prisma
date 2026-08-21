@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CASHIER
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  DEBIT
+  CREDIT_CARD
+  TRANSFER
+}
+
+enum PaymentStatus {
+  COMPLETED
+  PENDING
+  CANCELLED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role          @default(CASHIER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id               String            @id @default(uuid())
+  code             String            @unique
+  name             String
+  description      String?
+  price            Float
+  costPrice        Float             @default(0)
+  stock            Int               @default(0)
+  minStock         Int               @default(5)
+  categoryId       String
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  transactionItems TransactionItem[]
+}
+
+model Customer {
+  id             String        @id @default(uuid())
+  name           String
+  email          String?       @unique
+  phone          String?
+  address        String?
+  totalPurchases Float         @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  transactions   Transaction[]
+}
+
+model Transaction {
+  id             String            @id @default(uuid())
+  invoiceNo      String            @unique
+  subtotal       Float
+  taxAmount      Float             @default(0)
+  discountAmount Float             @default(0)
+  totalAmount    Float
+  paymentMethod  PaymentMethod     @default(CASH)
+  paymentStatus  PaymentStatus     @default(COMPLETED)
+  notes          String?
+  customerId     String?
+  customer       Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  userId         String?
+  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  items          TransactionItem[]
+}
+
+model TransactionItem {
+  id            String      @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productName   String
+  quantity      Int
+  unitPrice     Float
+  subtotal      Float
+}

@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.bun/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env
+*.local
+
+# Database / IDE
+*.db
+*.db-journal
+.vscode/
+.idea/
+.DS_Store
