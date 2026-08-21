@@ -3,56 +3,49 @@ import { prisma } from "../db";
 import { validateEmail } from "../utils/validation";
 
 export const customerRoutes = new Elysia({ prefix: "/api/customers" })
-  .get(
-    "/",
-    async ({ query }) => {
-      try {
-        const searchStr = typeof query?.search === "string" ? query.search.trim().replace(/[%_]/g, "") : "";
-        const where: any = searchStr
-          ? {
-              OR: [
-                { name: { contains: searchStr } },
-                { phone: { contains: searchStr } },
-                { email: { contains: searchStr } },
-              ],
-            }
-          : {};
+  .get("/", async ({ query }) => {
+    try {
+      const searchParam = query?.search;
+      const searchStr = typeof searchParam === "string" ? searchParam.trim().replace(/[%_]/g, "") : "";
+      const where: any = searchStr
+        ? {
+            OR: [
+              { name: { contains: searchStr } },
+              { phone: { contains: searchStr } },
+              { email: { contains: searchStr } },
+            ],
+          }
+        : {};
 
-        const customers = await prisma.customer.findMany({
-          where,
-          orderBy: { name: "asc" },
-          include: {
-            _count: { select: { transactions: true } },
-          },
-        });
+      const customers = await prisma.customer.findMany({
+        where,
+        orderBy: { name: "asc" },
+        include: {
+          _count: { select: { transactions: true } },
+        },
+      });
 
-        return {
-          success: true,
-          data: customers.map((c) => ({
-            id: c.id,
-            name: c.name,
-            email: c.email || undefined,
-            phone: c.phone || undefined,
-            address: c.address || undefined,
-            totalPurchases: c.totalPurchases || 0,
-            transactionCount: c._count ? c._count.transactions : 0,
-            createdAt: c.createdAt,
-          })),
-        };
-      } catch (err: any) {
-        console.warn("⚠️ [Customer Route Handler Notice]: Returning empty customer array");
-        return {
-          success: true,
-          data: [],
-        };
-      }
-    },
-    {
-      query: t.Object({
-        search: t.Optional(t.String()),
-      }),
+      return {
+        success: true,
+        data: customers.map((c) => ({
+          id: c.id,
+          name: c.name,
+          email: c.email || undefined,
+          phone: c.phone || undefined,
+          address: c.address || undefined,
+          totalPurchases: c.totalPurchases || 0,
+          transactionCount: c._count ? c._count.transactions : 0,
+          createdAt: c.createdAt,
+        })),
+      };
+    } catch (err: any) {
+      console.warn("⚠️ [Customer Route Handler Notice]: Returning empty customer array");
+      return {
+        success: true,
+        data: [],
+      };
     }
-  )
+  })
   .get("/:id", async ({ params: { id }, set }) => {
     try {
       const customer = await prisma.customer.findUnique({
